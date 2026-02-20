@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickMailPro - Free Temporary Email Service</title>
+    <meta name="description" content="Get free disposable email addresses instantly. No registration required. Protect your privacy with temporary email service.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .email-section {
+            padding: 30px;
+            text-align: center;
+        }
+        .email-display {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            word-break: break-all;
+        }
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #64748b;
+        }
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        .mail-list {
+            padding: 0 30px 30px;
+        }
+        .mail-item {
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .mail-from {
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .mail-subject {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .mail-body {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        footer {
+            background: #f1f5f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #64748b;
+        }
+        footer a {
+            color: #2563eb;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .loading {
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📧 QuickMailPro</h1>
+            <p>Free Temporary Email Service - No Registration Required</p>
+        </header>
+        
+        <div class="email-section">
+            <h2>Your Temporary Email Address</h2>
+            <div class="email-display" id="email-address">
+                <span class="loading">Generating...</span>
+            </div>
+            <p id="email-count" style="margin-top: 10px; color: #64748b;">Email 0/2 (Free Plan)</p>
+            <button class="btn" onclick="copyEmail()">📋 Copy Email</button>
+            <button class="btn" onclick="generateNewEmail()">🆕 New Email</button>
+            <button class="btn btn-secondary" onclick="upgrade()">💎 Upgrade to Premium</button>
+        </div>
+        
+        <div class="mail-list">
+            <h2>Inbox</h2>
+            <div id="mail-list">
+                <p class="loading">No emails yet. Use this address to receive messages!</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Need virtual phone numbers? Try these services:</p>
+            <a href="#" target="_blank">Virtual Number</a>
+            <a href="#" target="_blank">Virtual SMS</a>
+            <br><br>
+            <a href="/privacy">Privacy Policy</a> | 
+            <a href="/terms">Terms of Service</a>
+            <br><br>
+            © 2026 QuickMailPro - Free Temp Mail Service
+        </footer>
+    </div>
+
+    <script>
+        // 替换为你的实际Workers地址
+        const API_URL = "https://quickmailpro.jdzxy188.workers.dev";
+        let currentEmail = "";
+        let emailCount = 0;
+        const MAX_FREE_EMAILS = 2;
+        
+        async function generateNewEmail() {
+            if (emailCount >= MAX_FREE_EMAILS) {
+                alert("Free plan allows only 2 email addresses!\n\nUpgrade to Premium for 10 email addresses, longer retention, and priority support.");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/generate`);
+                const data = await response.json();
+                currentEmail = data.email;
+                emailCount++;
+                document.getElementById("email-address").textContent = currentEmail;
+                document.getElementById("email-count").textContent = 
+                    `Email ${emailCount}/${MAX_FREE_EMAILS} (Free Plan)`;
+            } catch (error) {
+                console.error("Error generating email:", error);
+                document.getElementById("email-address").textContent = "Error: Please try again";
+            }
+        }
+        
+        async function loadEmails() {
+            if (!currentEmail) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/emails/${currentEmail}`);
+                const emails = await response.json();
+                
+                const mailList = document.getElementById("mail-list");
+                if (emails.length === 0) {
+                    mailList.innerHTML = '<p class="loading">No emails yet. Use this address to receive messages!</p>';
+                    return;
+                }
+                
+                mailList.innerHTML = emails.map(mail => `
+                    <div class="mail-item">
+                        <div class="mail-from">From: ${mail.from || 'Unknown'}</div>
+                        <div class="mail-subject">Subject: ${mail.subject || '(No subject)'}</div>
+                        <div class="mail-body">${mail.body || ''}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("Error loading emails:", error);
+            }
+        }
+        
+        function copyEmail() {
+            if (!currentEmail) return;
+            
+            navigator.clipboard.writeText(currentEmail).then(() => {
+                alert("Email copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy:", err);
+                const textArea = document.createElement("textarea");
+                textArea.value = currentEmail;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                alert("Email copied!");
+            });
+        }
+        
+        function upgrade() {
+            alert("🚀 Premium Features:\n• 10 email addresses\n• 7-day email retention\n• Priority support\n• No ads\n\nContact us to upgrade!");
+        }
+        
+        // Initialize on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            generateNewEmail();
+        });
+    </script>
+</body>
+</html>
